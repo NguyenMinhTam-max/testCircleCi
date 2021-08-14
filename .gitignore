@@ -21,12 +21,14 @@ node_modules
 logs/*
 models/logs/*
 
+# uploads
+uploads/*
 
-#environments
-environments
+# tmp
+tmp/*
+
 
 # things
 yarn.lock
 package-lock.json
 yarn-error.log
-
