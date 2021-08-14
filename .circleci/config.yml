@@ -4,16 +4,21 @@ version: 2.1
 orbs:
   node: circleci/node@4.1
 
-jobs:
-  run:
-    executor: node/default
-    steps:
-      - checkout
-      - node/install-packages:
-          cache-path: ~/project/node_modules
-          override-ci-command: npm i
-      - run: npm start
+#jobs:
+#  run:
+#    executor: node/default
+#    steps:
+#      - checkout
+#      - node/install-packages:
+#          cache-path: ~/project/node_modules
+#          override-ci-command: npm i
+#      - run: npm start
 workflows:
-  test_my_app:
+  matrix-tests:
     jobs:
-      - run
+      - node/test:
+          version: 13.11.0
+      - node/test:
+          version: 12.16.0
+      - node/test:
+          version: 10.19.0
