@@ -10,4 +10,4 @@ server.use(routers)
 server.listen(environment.portServer, environment.ipServer, () => {
 	console.log(`Server Is Starting At: ${environment.ipServer}:${environment.portServer}`)
 })
-console.log('testing')
+console.log('testing purpose')
