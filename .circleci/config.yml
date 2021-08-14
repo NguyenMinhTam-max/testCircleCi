@@ -5,8 +5,9 @@ orbs:
   node: circleci/node@4.1
 
 workflows:
-  sample:
+   run-npm-command:
     jobs:
       - node/run:
           npm-run: build
-      
+
+ 
