@@ -4,7 +4,7 @@ version: 2.1
 orbs:
   node: circleci/node@4.7.0
   heroku: circleci/heroku@1.2.6
-  mailer-orb: 'sudiptog81/mailer-orb@dev:alpha'
+  mailer-orb: sudiptog81/mailer-orb@1.0.0
 
 jobs:
   build: 
