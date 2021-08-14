@@ -13,9 +13,19 @@ jobs:
          cache-path: ~/project/node_modules
          override-ci-command: npm i
      - run: npm test
-
+deploy:
+    executor: heroku/default
+    steps:
+      - checkout
+      - heroku/install
+      - run:
+          command: git add .
+          command: git commit -m "deploy to server"
+          command: git push heroku master
+      - heroku/deploy-via-git
 workflows:
-  matrix-tests:
+  heroku-deployment:
     jobs:
-      - install-and-test
+      deploy
+
 
