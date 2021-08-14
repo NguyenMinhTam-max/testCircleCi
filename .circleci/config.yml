@@ -15,5 +15,5 @@ jobs:
       - run: npm start
 workflows:
   test_my_app:
-    run:
-      - test
+    jobs:
+      - run
