@@ -1,12 +1,8 @@
-# This config is equivalent to both the '.circleci/extended/orb-free.yml' and the base '.circleci/config.yml'
 version: 2.1
 
 orbs:
   node: circleci/node@4.7.0
   heroku: circleci/heroku@1.2.6
-
-jobs:
-  build: 
 
 jobs:
   install:
@@ -18,8 +14,6 @@ jobs:
          override-ci-command: npm i
      - run: npm start
 
-
-#name of orbs/jobs to run
 workflows:
   matrix-tests:
     jobs:
