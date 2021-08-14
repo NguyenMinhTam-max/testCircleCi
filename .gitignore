@@ -25,3 +25,8 @@ models/logs/*
 #environments
 environments
 
+# things
+yarn.lock
+package-lock.json
+yarn-error.log
+
