@@ -1,5 +1,5 @@
 exports.isNumValid = function (num) {
-    if (num > 11)
+    if (num > 9)
         return true
     return false
 }
