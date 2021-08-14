@@ -7,6 +7,7 @@ const bcrypt = require('bcrypt')
 
 const accountModel = require('../models/account.model')
 const roleModel = require('../models/role.model')
+const deliveryModel = require('../models/delivery.model')
 const imageService = require('../services/imageService')
 
 const successCode = 0
@@ -30,11 +31,29 @@ router.get('/list', async (req, res) => {
 
 router.get('/details/:id', async (req, res) => {
 	const { id } = req.params
+	
+	if(isNaN(Number(id))){
+		return res.status(404).json({
+			message: 'id must be of integer type',
+			statusCode: errorCode
+		})
+	}
+
 	const result = await accountModel.findById(id)
 
-	if (result) {
+	const deliveryAddress = await deliveryModel.findDeliveryByAccId(id)
+
+	const responseResult = {
+		email: result[0].acc_email,
+		fullName: result[0].acc_full_name,
+		phoneNumber: result[0].acc_phone_number,
+		avatar: result[0].acc_avatar,
+		deliveryAddress,
+	}
+
+	if (responseResult) {
 		return res.status(200).json({
-			account: result,
+			account: responseResult,
 			statusCode: successCode
 		})
 	}
@@ -94,36 +113,34 @@ router.post('/update', accountValidation.updateAccount, async (req, res) => {
 })
 
 router.post('/update-password', accountValidation.updateAccountPassword, async (req, res) => {
-	const { accId, accPassWord, accConfirmPassword } = req.body
+	const { accId, accOldPassword, accNewPassword, accConfirmPassword } = req.body
 
-	if (accPassWord !== accConfirmPassword) {
+	const accInfo = await accountModel.findById(accId)
+
+	if (accInfo.length === 0) {
+		return res.status(500).json({ 
+			errorMessage: 'User Does Not Exist!',
+			statusCode: errorCode
+		})
+	}
+
+	if (!bcrypt.compareSync(accOldPassword, accInfo[0].acc_password)) {
+		return res.status(500).json({ 
+			errorMessage: 'Password Incorrect!',
+			statusCode: errorCode
+		})
+	}
+
+	if (accNewPassword !== accConfirmPassword) {
 		return res.status(400).json({
 			errorMessage: 'password is different from confirm password',
 			statusCode: errorCode
 		})
 	}
 
-	const accInfo = accountModel.findById(accId)
-
-	if (accInfo.length === 0) {
-		return res.status(500).json({
-			errorMessage: 'accId does not exist',
-			statusCode: errorCode
-		})
-	}
-
 	let date_ob = new Date()
 
-	const result = await accountModel.findById(accId)
-
-	if (result.length != 0) {
-		return res.status(400).json({
-			errorMessage: 'account not exist',
-			statusCode: errorCode
-		})
-	}
-
-	const hashPassword = bcrypt.hashSync(accPassWord, 3)
+	const hashPassword = bcrypt.hashSync(accNewPassWord, 3)
 	const account = {
 		acc_password: hashPassword,
 		acc_updated_date: date_ob
@@ -139,6 +156,13 @@ router.post('/update-password', accountValidation.updateAccountPassword, async (
 router.post('/delete/:id',async (req, res) => {
 	const { id } = req.params
 
+	if(isNaN(Number(id))){
+		return res.status(404).json({
+			message: 'id must be of integer type',
+			statusCode: errorCode
+		})
+	}
+	
 	await knex('tbl_account')
 		.update({ acc_status: 1 })
 		.where('acc_id', id)
@@ -182,4 +206,47 @@ router.post('/update-role', accountValidation.updateRoleAccount, async (req, res
 		statusCode: successCode
 	})
 })
+
+router.post('/add-avatar', accountValidation.avatar, async (req, res) => {
+	const { accId } = req.body
+	var avatar = req.files
+
+	const checkAvatar = avatar.image ? true : false
+
+	const result = await accountModel.findById(accId)
+
+	if (checkAvatar) {
+		await imageService.avatarUploader(avatar.image, accId, 'insert')
+	}
+})
+
+router.post('/update-avatar', accountValidation.avatar, async (req, res) => {
+	const { accId } = req.body
+	var avatar = req.files
+
+	const checkAvatar = avatar.image ? true : false
+
+	const result = await accountModel.findById(accId)
+
+	if (checkAvatar) {
+		let promiseToUploadImage = new Promise(async function (resolve) {
+			await imageService.avatarUploader(avatar.image, accId, 'update', result[0].acc_avatar)
+			resolve();
+		})
+		promiseToUploadImage.then(function () {
+			imageService.deleteImage(result[0].acc_avatar)
+		})
+	}
+})
+
+router.post('/delete-avatar', accountValidation.avatar, async (req, res) => {
+	const { accId } = req.body
+
+	const result = await accountModel.findById(accId)
+
+	promiseToUploadImage.then(function () {
+		imageService.deleteImage(result[0].acc_avatar)
+	})
+})
+
 module.exports = router

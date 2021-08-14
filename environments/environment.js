@@ -1,7 +1,8 @@
 const env = {
+	ipServer: 'localhost',
 	portServer: process.env.PORT || 3000,
 	configDatabase: {
-		connectionString: process.env.DATABASE_URL
+		connectionString: 'postgres://postgres:Batman.02@localhost:5432/FamilyStore_db'
 	},
 	secret: process.env.SECRET || 'family_store_secret',
 	APP_ID: process.env.APP_ID || 'test_id',
@@ -12,9 +13,9 @@ const env = {
 		user: process.env.MAIL_USER || 'family.store.bot%40gmail.com',
 		password: process.env.MAIL_PASSWORD || 'Nn123456789@@'
 	},
-	CLOUDINARY_CLOUD_NAME: 'dhbc009wq',
-	CLOUDINARY_API_KEY: '851879458196736',
-	CLOUDINARY_API_SECRET: 'Vg77l60OMf0rxtIVBf1lGMPolXI'
+	CLOUDINARY_CLOUD_NAME:'dhbc009wq',
+	CLOUDINARY_API_KEY:'851879458196736',
+	CLOUDINARY_API_SECRET:'Vg77l60OMf0rxtIVBf1lGMPolXI'
 }
 
 module.exports = env

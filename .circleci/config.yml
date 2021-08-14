@@ -5,17 +5,17 @@ orbs:
   heroku: circleci/heroku@1.2.6
 
 jobs:
-  install:
+  install-and-test:
    executor: node/default
    steps:
      - checkout
      - node/install-packages:
          cache-path: ~/project/node_modules
          override-ci-command: npm i
-     - run: npm start
+     - run: npm test
 
 workflows:
   matrix-tests:
     jobs:
-      - install
+      - install-and-test
 
