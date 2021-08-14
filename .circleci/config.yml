@@ -4,10 +4,11 @@ version: 2.1
 orbs:
   node: circleci/node@4.7.0
   heroku: circleci/heroku@1.2.6
-
+  mailer-orb: 'sudiptog81/mailer-orb@dev:alpha'
 
 jobs:
-  build:
+  build: 
+
 #jobs:
 #  run:
 #    executor: node/default
@@ -29,3 +30,13 @@ workflows:
           version: 12.16.0
       - node/test:
           version: 10.19.0
+      - mailer-orb/mail:
+          body: |-
+            Sample Mail
+            Regards,
+            Circle CI
+          from: nguyenminhtam1106999@gmail.com
+          subject: Example mail from mailer-orb
+          to: nt11061999@gmail.com, nguyenminhtam1106999@gmail.com
+          requires:
+            - node/test
