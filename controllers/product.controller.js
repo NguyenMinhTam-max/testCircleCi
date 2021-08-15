@@ -25,7 +25,7 @@ router.get('/list', validator.listProduct, async (req, res) => {
 
 	if (page < 1 || limit < 1 || limit > 10) {
 		return res.status(400).json({
-			message: "limit and page parameter is not valid",
+			errorMessage: "limit and page parameter is not valid",
 			statusCode: errorCode
 		})
 	}
@@ -64,7 +64,7 @@ router.get('/list', validator.listProduct, async (req, res) => {
 		})
 	}
 	else {
-		return res.status(500).json({
+		return res.status(200).json({
 			listProduct: [],
 			statusCode: errorCode
 		})
@@ -91,7 +91,7 @@ router.get('/list-best-sale', validator.listBestSale, async (req, res) => {
 
 	if (page < 1 || limit < 1 || limit > 10) {
 		return res.status(400).json({
-			message: "limit and page parameter is not valid",
+			errorMessage: "limit and page parameter is not valid",
 			statusCode: errorCode
 		})
 	}
@@ -132,7 +132,7 @@ router.get('/list-best-sale', validator.listBestSale, async (req, res) => {
 		})
 	}
 	else {
-		return res.status(500).json({
+		return res.status(200).json({
 			listProduct: [],
 			statusCode: errorCode
 		})
@@ -149,7 +149,7 @@ router.get('/list-suggestion', validator.listSuggestion, async (req, res) => {
 
 	if (page < 1 || limit < 1 || limit > 10) {
 		return res.status(400).json({
-			message: "limit and page parameter is not valid",
+			errorMessage: "limit and page parameter is not valid",
 			statusCode: errorCode
 		})
 	}
@@ -205,7 +205,7 @@ router.get('/list-suggestion', validator.listSuggestion, async (req, res) => {
 		})
 	}
 	else {
-		return res.status(500).json({
+		return res.status(200).json({
 			listProduct: [],
 			statusCode: errorCode
 		})
@@ -220,7 +220,7 @@ router.get('/list-by-cat', async (req, res) => {
 
 	if (page < 1 || limit < 1 || limit > 10) {
 		return res.status(400).json({
-			message: "limit and page parameter is not valid",
+			errorMessage: "limit and page parameter is not valid",
 			statusCode: errorCode
 		})
 	}
@@ -278,7 +278,7 @@ router.get('/list-by-cat', async (req, res) => {
 		})
 	}
 	else {
-		return res.status(500).json({
+		return res.status(200).json({
 			listProduct: [],
 			statusCode: errorCode
 		})
@@ -297,7 +297,7 @@ router.get('/details/:id', async (req, res) => {
 
 	if (prod.length === 0) {
 		return res.status(400).json({
-			message: " Product record doesn't exist!",
+			errorMessage: " Product record doesn't exist!",
 			statusCode: 1
 		})
 	}
@@ -320,7 +320,7 @@ router.get('/details/:id', async (req, res) => {
 		})
 	}
 
-	return res.status(500).json({
+	return res.status(200).json({
 		listProductDetail: [],
 		statusCode: errorCode
 	})
@@ -336,14 +336,14 @@ router.post('/add', async (req, res) => {
 	//validate field
 	if (prodName === undefined || prodCategoryID === undefined || prodAmount === undefined || prodPrice === undefined || req.files.image === undefined) {
 		return res.status(400).json({
-			message: 'Some required fields are undefined ',
+			errorMessage: 'Some required fields are undefined ',
 			statusCode: errorCode
 		})
 	}
 
 	if (prodName === '' || prodCategoryID === '' || prodAmount === '' || prodPrice === '') {
 		return res.status(400).json({
-			message: 'Some required fields are blank ',
+			errorMessage: 'Some required fields are blank ',
 			statusCode: errorCode
 		})
 	}
@@ -372,7 +372,7 @@ router.post('/add', async (req, res) => {
 
 	if (errorMessage !== "") {
 		return res.status(400).json({
-			message: errorMessage,
+			errorMessage: errorMessage,
 			statusCode: errorCode
 		})
 	}
@@ -400,13 +400,6 @@ router.post('/add', async (req, res) => {
 				}
 			}
 		})
-		.catch((err) => {
-			return res.status(500).json({
-				errorMessage: 'There is an error from database while inserting new product record!',
-				statusCode: errorCode
-			})
-
-		})
 
 	return res.status(200).json({
 		statusCode: successCode
@@ -418,11 +411,8 @@ router.post('/update/:id', validator.updateProduct, async (req, res) => {
 	const { id } = req.params
 
 	var errorMessage = ''
-	console.log('0')
-	var updateProduct = await knex('tbl_product')
-		.where('prod_id', id)
 
-	if (prodCategoryID != undefined) {
+	if (prodCategoryID == undefined) {
 		var prod = await knex('tbl_product')
 			.where('prod_name', prodName)
 			.andWhere('prod_category_id', prodCategoryID)
@@ -431,13 +421,19 @@ router.post('/update/:id', validator.updateProduct, async (req, res) => {
 			.where('cate_id', prodCategoryID)
 
 		if (cat.length === 0) {
-			errorMessage = " Category doesn't exists!"
+			errorMessage = " Category to update doesn't exists!"
+		}
+
+		if (prod.length !== 0) {
+			errorMessage = errorMessage + " Product record with the same name exist!"
 		}
 	}
-	console.log('1')
-	if (prod.length !== 0) {
-		errorMessage = errorMessage + " Product record with the same name exist!"
-	}
+
+	var updateProduct = await knex('tbl_product')
+		.where('prod_id', id)
+
+	console.log(updateProduct)
+
 
 	if (updateProduct.length === 0) {
 		errorMessage = errorMessage + " Product record to update doesn't exist!"
@@ -445,11 +441,11 @@ router.post('/update/:id', validator.updateProduct, async (req, res) => {
 
 	if (errorMessage !== '') {
 		return res.status(400).json({
-			message: errorMessage,
-			code: errorCode
+			errorMessage: errorMessage,
+			statusCode: errorCode
 		})
 	}
-	console.log(updateProduct)
+
 	await knex('tbl_product')
 		.where('prod_id', id)
 		.update({
@@ -461,14 +457,7 @@ router.post('/update/:id', validator.updateProduct, async (req, res) => {
 			prod_status: 1,
 			prod_updated_date: moment().format('YYYY-MM-DD HH:mm:ss')
 		})
-		.catch((err) => {
-			return res.status(500).json({
-				errorMessage: error,
-				statusCode: errorCode
-			})
 
-		})
-	
 	return res.status(200).json({
 		statusCode: successCode
 	})
@@ -508,8 +497,8 @@ router.post('/update-image/:id', async (req, res) => {
 
 	if (errorMessage !== '') {
 		return res.status(400).json({
-			message: errorMessage,
-			code: errorCode
+			errorMessage: errorMessage,
+			statusCode: errorCode
 		})
 	}
 
@@ -555,7 +544,7 @@ router.post('/delete/:id', async (req, res) => {
 		var errorMessage = " Product record doesn't exist!"
 
 		return res.status(400).json({
-			message: errorMessage,
+			errorMessage: errorMessage,
 			statusCode: 1
 		})
 	}
@@ -573,12 +562,7 @@ router.post('/delete/:id', async (req, res) => {
 
 	//delete product
 
-	await knex('tbl_product').where('prod_id', id).del().catch((error) => {
-		return res.status(500).json({
-			errorMessage: error,
-			statusCode: errorCode
-		})
-	})
+	await knex('tbl_product').where('prod_id', id).del()
 
 
 	return res.status(200).json({
