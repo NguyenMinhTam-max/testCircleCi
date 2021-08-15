@@ -409,8 +409,7 @@ router.post('/add', async (req, res) => {
 router.post('/update/:id', validator.updateProduct, async (req, res) => {
 	const { prodName, prodCategoryID, prodAmount, prodPrice, prodDescription } = req.body
 	const { id } = req.params
-	console.log(req.params)
-	console.log(req.body)
+
 	var errorMessage = ''
 	/*
 	if (prodCategoryID == undefined) {
