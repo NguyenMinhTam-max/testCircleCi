@@ -9,9 +9,29 @@ const validator = require('../middlewares/validation/product.validate')
 const successCode = 0
 const errorCode = 1
 
-router.get('/list', validator.listProduct, async (req, res) => {
+router.post('/list', validator.listProduct, async (req, res) => {
 	const { page, limit } = req.body
 	const offset = limit * (page - 1)
+
+
+	if (page < 1 || limit < 1 || limit > 10) {
+		return res.status(400).json({
+			errorMessage: "limit and page parameter is not valid",
+			statusCode: errorCode
+		})
+	}
+
+	var numberPage = await knex.raw(`select count(distinct tbl_product.prod_id) 
+	from tbl_product`)
+
+
+	numberPage = Number(numberPage.rows[0].count)
+	if (numberPage > limit) {
+		numberPage = Math.ceil(numberPage / limit)
+	}
+	else {
+		numberPage = 1
+	}
 
 	var result = await knex.raw(`with product as(
 		select * from tbl_product
@@ -23,13 +43,7 @@ router.get('/list', validator.listProduct, async (req, res) => {
 	on img.prod_img_product_id = pr.prod_id`)
 	result = result.rows
 
-	if (page < 1 || limit < 1 || limit > 10) {
-		return res.status(400).json({
-			errorMessage: "limit and page parameter is not valid",
-			statusCode: errorCode
-		})
-	}
-	//process return list
+
 	var prodList = []
 
 	var index = 0
@@ -49,7 +63,7 @@ router.get('/list', validator.listProduct, async (req, res) => {
 			index = i + 1
 			imageLink.push(result[i].prod_img_data)
 
-			if ((i >= result.length - 1) || (i != 0 && result[index].prod_id != result[index - 1].prod_id)) {
+			if ((i >= result.length - 1) || (result[index].prod_id != result[index - 1].prod_id)) {
 				break;
 			}
 		}
@@ -59,12 +73,13 @@ router.get('/list', validator.listProduct, async (req, res) => {
 
 	if (result) {
 		return res.status(200).json({
+			numberOfPage: numberPage,
 			listProduct: prodList,
 			statusCode: successCode
 		})
 	}
 	else {
-		return res.status(200).json({
+		return res.status(500).json({
 			listProduct: [],
 			statusCode: errorCode
 		})
@@ -72,10 +87,17 @@ router.get('/list', validator.listProduct, async (req, res) => {
 })
 
 
-router.get('/list-best-sale', validator.listBestSale, async (req, res) => {
+router.post('/list-best-sale', validator.listBestSale, async (req, res) => {
 	const { limit, page } = req.body
 
 	const offset = limit * (page - 1)
+
+	if (page < 1 || limit < 1 || limit > 10) {
+		return res.status(400).json({
+			errorMessage: "limit and page parameter is not valid",
+			statusCode: errorCode
+		})
+	}
 
 	var result = await knex.raw(`with productSale as(
 		select sum(bde.bdetail_quantity) as quantity,pro.* from (tbl_product pro join
@@ -89,11 +111,16 @@ router.get('/list-best-sale', validator.listBestSale, async (req, res) => {
 
 	result = result.rows
 
-	if (page < 1 || limit < 1 || limit > 10) {
-		return res.status(400).json({
-			errorMessage: "limit and page parameter is not valid",
-			statusCode: errorCode
-		})
+
+
+	var numberPage = await knex.raw('select count(DISTINCT bdetail_product_id) from tbl_bill_detail')
+
+	numberPage = Number(numberPage.rows[0].count)
+	if (numberPage > limit) {
+		numberPage = Math.ceil(numberPage / limit)
+	}
+	else {
+		numberPage = 1
 	}
 
 	//process return list
@@ -127,6 +154,7 @@ router.get('/list-best-sale', validator.listBestSale, async (req, res) => {
 
 	if (result) {
 		return res.status(200).json({
+			numberOfPage: numberPage,
 			listProduct: prodList,
 			statusCode: successCode
 		})
@@ -142,7 +170,7 @@ router.get('/list-best-sale', validator.listBestSale, async (req, res) => {
 
 
 
-router.get('/list-suggestion', validator.listSuggestion, async (req, res) => {
+router.post('/list-suggestion', validator.listSuggestion, async (req, res) => {
 	const { limit, page, catID } = req.body
 	const offset = limit * (page - 1)
 
@@ -154,6 +182,18 @@ router.get('/list-suggestion', validator.listSuggestion, async (req, res) => {
 		})
 	}
 
+	var numberPage = await knex.raw(`select count(distinct tbl_product.prod_id) 
+	from tbl_product join tbl_comment on tbl_product.prod_id = tbl_comment.cmt_product_id
+	where tbl_product.prod_category_id = ${catID}`)
+	result = result.rows
+
+	numberPage = Number(numberPage.rows[0].count)
+	if (numberPage > limit) {
+		numberPage = Math.ceil(numberPage / limit)
+	}
+	else {
+		numberPage = 1
+	}
 	var result = await knex.raw(`with product as(
 		select tbl_product.*, round(avg(tbl_comment.cmt_vote),2) as avgStar
 		from tbl_product join tbl_comment on tbl_product.prod_id = tbl_comment.cmt_product_id
@@ -200,6 +240,7 @@ router.get('/list-suggestion', validator.listSuggestion, async (req, res) => {
 
 	if (result) {
 		return res.status(200).json({
+			numberOfPage: numberPage,
 			listProduct: prodList,
 			statusCode: successCode
 		})
@@ -213,10 +254,19 @@ router.get('/list-suggestion', validator.listSuggestion, async (req, res) => {
 
 })
 
-router.get('/list-by-cat', async (req, res) => {
+router.post('/list-by-cat', async (req, res) => {
 	const { limit, page, catID } = req.body
 	const offset = limit * (page - 1)
-
+	var numberPage = await knex.raw(`select count(distinct tbl_product.prod_id) 
+	from tbl_product 
+	where tbl_product.prod_category_id = ${catID}`)
+	numberPage = Number(numberPage.rows[0].count)
+	if (numberPage > limit) {
+		numberPage = Math.ceil(numberPage / limit)
+	}
+	else {
+		numberPage = 1
+	}
 
 	if (page < 1 || limit < 1 || limit > 10) {
 		return res.status(400).json({
@@ -237,7 +287,7 @@ router.get('/list-by-cat', async (req, res) => {
 	on img.prod_img_product_id = pr.prod_id`)
 
 	result = result.rows
-
+		console.log(result)
 
 	//process return list
 	var prodList = []
@@ -272,6 +322,7 @@ router.get('/list-by-cat', async (req, res) => {
 
 	if (result) {
 		return res.status(200).json({
+			numberOfPage: numberPage,
 			numberProduct: numberOfProduct.rows[0],
 			listProduct: prodList,
 			statusCode: successCode
@@ -411,29 +462,24 @@ router.post('/update/:id', validator.updateProduct, async (req, res) => {
 	const { id } = req.params
 
 	var errorMessage = ''
-	/*
-	if (prodCategoryID == undefined) {
-		var prod = await knex('tbl_product')
-			.where('prod_name', prodName)
-			.andWhere('prod_category_id', prodCategoryID)
 
-		var cat = await knex('tbl_categories')
-			.where('cate_id', prodCategoryID)
+	var prod = await knex('tbl_product')
+		.where('prod_name', prodName)
+		.andWhere('prod_category_id', prodCategoryID)
 
-		if (cat.length === 0) {
-			errorMessage = " Category to update doesn't exists!"
-		}
-
-		if (prod.length !== 0) {
-			errorMessage = errorMessage + " Product record with the same name exist!"
-		}
-	}
-	*/
 	var updateProduct = await knex('tbl_product')
 		.where('prod_id', id)
 
-	console.log(updateProduct)
-	/*
+	var cat = await knex('tbl_categories')
+		.where('cate_id', prodCategoryID)
+
+	if (cat.length === 0) {
+		errorMessage = " Category doesn't exists!"
+	}
+
+	if (prod.length !== 0) {
+		errorMessage = errorMessage + " Product record with the same name exist!"
+	}
 
 	if (updateProduct.length === 0) {
 		errorMessage = errorMessage + " Product record to update doesn't exist!"
@@ -445,7 +491,7 @@ router.post('/update/:id', validator.updateProduct, async (req, res) => {
 			statusCode: errorCode
 		})
 	}
-	*/
+
 	await knex('tbl_product')
 		.where('prod_id', id)
 		.update({
