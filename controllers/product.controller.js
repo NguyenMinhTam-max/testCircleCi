@@ -530,7 +530,7 @@ router.post('/update-image/:id', async (req, res) => {
 	if (result.length === 0) {
 		errorMessage = errorMessage + " Product record doesn't exist!"
 	}
-
+	
 	//validate image
 	var errorFromValidateImage = imageValidator.validateValidImage(images)
 
@@ -544,16 +544,16 @@ router.post('/update-image/:id', async (req, res) => {
 	if (newImageLength !== oldimageLength) {
 		errorMessage = errorMessage + " Old image links and new uploaded image doesn't have the consistency about length!"
 	}
-
+	
 	if (errorMessage !== '') {
 		return res.status(400).json({
 			errorMessage: errorMessage,
 			statusCode: errorCode
 		})
 	}
-
-	images = imageService.getImage(images)
-
+	
+	//images = imageService.getImage(images)
+	
 	//uploadd image
 
 	if (images.length === undefined) {// number of uploaded image is 1
@@ -598,7 +598,8 @@ router.post('/delete/:id', async (req, res) => {
 			statusCode: 1
 		})
 	}
-
+	//delete comment
+	await knex('tbl_comment').where('cmt_product_id', id).del()
 
 	//delete image of product
 	await knex('tbl_product_images').where('prod_img_product_id', id).del()
