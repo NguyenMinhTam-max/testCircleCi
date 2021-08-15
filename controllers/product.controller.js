@@ -418,7 +418,7 @@ router.post('/update/:id', validator.updateProduct, async (req, res) => {
 	const { id } = req.params
 
 	var errorMessage = ''
-
+	console.log('0')
 	var updateProduct = await knex('tbl_product')
 		.where('prod_id', id)
 
@@ -434,7 +434,7 @@ router.post('/update/:id', validator.updateProduct, async (req, res) => {
 			errorMessage = " Category doesn't exists!"
 		}
 	}
-	
+	console.log('1')
 	if (prod.length !== 0) {
 		errorMessage = errorMessage + " Product record with the same name exist!"
 	}
@@ -449,7 +449,7 @@ router.post('/update/:id', validator.updateProduct, async (req, res) => {
 			code: errorCode
 		})
 	}
-
+	console.log(updateProduct)
 	await knex('tbl_product')
 		.where('prod_id', id)
 		.update({
@@ -468,7 +468,7 @@ router.post('/update/:id', validator.updateProduct, async (req, res) => {
 			})
 
 		})
-
+	
 	return res.status(200).json({
 		statusCode: successCode
 	})
