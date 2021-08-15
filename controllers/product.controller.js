@@ -288,7 +288,7 @@ router.post('/list-by-cat', async (req, res) => {
 	on img.prod_img_product_id = pr.prod_id`)
 
 	result = result.rows
-		console.log(result)
+	console.log(result)
 
 	//process return list
 	var prodList = []
@@ -463,24 +463,27 @@ router.post('/update/:id', validator.updateProduct, async (req, res) => {
 	const { id } = req.params
 
 	var errorMessage = ''
+	if (prodCategoryID != undefined) {
+		var cat = await knex('tbl_categories')
+			.where('cate_id', prodCategoryID)
 
-	var prod = await knex('tbl_product')
-		.where('prod_name', prodName)
-		.andWhere('prod_category_id', prodCategoryID)
+		if (cat.length === 0) {
+			errorMessage = " Category doesn't exists!"
+		}
+	}
+
+	if (prodName != undefined && prodCategoryID != undefined) {
+		if (prod.length !== 0) {
+			errorMessage = errorMessage + " Product record with the same name and same category exist!"
+		}
+		var prod = await knex('tbl_product')
+			.where('prod_name', prodName)
+			.andWhere('prod_category_id', prodCategoryID)
+	}
 
 	var updateProduct = await knex('tbl_product')
 		.where('prod_id', id)
-
-	var cat = await knex('tbl_categories')
-		.where('cate_id', prodCategoryID)
-
-	if (cat.length === 0) {
-		errorMessage = " Category doesn't exists!"
-	}
-
-	if (prod.length !== 0) {
-		errorMessage = errorMessage + " Product record with the same name exist!"
-	}
+	console.log(updateProduct)
 
 	if (updateProduct.length === 0) {
 		errorMessage = errorMessage + " Product record to update doesn't exist!"
