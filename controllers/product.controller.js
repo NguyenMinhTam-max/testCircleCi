@@ -35,12 +35,13 @@ router.post('/list', validator.listProduct, async (req, res) => {
 
 	var result = await knex.raw(`with product as(
 		select * from tbl_product
-		order by prod_created_date desc
+		order by prod_id desc
 		offset ${offset}
 		limit ${limit}
 	)
 	select pr.*, img.prod_img_data from product pr left join tbl_product_images img
-	on img.prod_img_product_id = pr.prod_id`)
+	on img.prod_img_product_id = pr.prod_id
+	order by prod_id desc`)
 	result = result.rows
 
 
@@ -383,10 +384,9 @@ router.post('/add', async (req, res) => {
 
 	const { prodName, prodCategoryID, prodAmount, prodPrice, prodDescription, prodStatus } = req.body
 	var images = req.files //need to get image from input type file, name is 'image'
-	console.log(req.body)
 	var errorMessage = "";
 	//validate field
-	if (prodName === undefined || prodCategoryID === undefined || prodAmount === undefined || prodPrice === undefined || req.files.image === undefined) {
+	if (prodName === undefined || prodCategoryID === undefined || prodAmount === undefined || prodPrice === undefined) {
 		return res.status(400).json({
 			errorMessage: 'Some required fields are undefined ',
 			statusCode: errorCode
@@ -416,10 +416,17 @@ router.post('/add', async (req, res) => {
 	}
 
 	//validate image
-	var errorFromValidateImage = imageValidator.validateValidImage(images)
+	if (images != null) {
+		var errorFromValidateImage = imageValidator.validateValidImage(images)
 
-	if (errorFromValidateImage !== '') {
-		errorMessage = errorMessage + errorFromValidateImage
+		if (errorFromValidateImage !== '') {
+			errorMessage = errorMessage + errorFromValidateImage
+		}
+
+		images = imageService.getImage(images)
+	}
+	else {
+		images = null
 	}
 
 	if (errorMessage !== "") {
@@ -428,8 +435,6 @@ router.post('/add', async (req, res) => {
 			statusCode: errorCode
 		})
 	}
-
-	images = imageService.getImage(images)
 
 	await knex('tbl_product').insert({
 		prod_name: prodName,
@@ -442,13 +447,14 @@ router.post('/add', async (req, res) => {
 	})
 		.returning('*')
 		.then(async (rows) => {
-
-			if (images.length === undefined) {// number of uploaded image is 1
-				await imageService.productUploader(images, rows[0].prod_id, 'insert')
-			}
-			else {
-				for (let i = 0; i < images.length; i++) {
-					await imageService.productUploader(images[i], rows[0].prod_id, 'insert')
+			if (images != null) {
+				if (images.length === undefined) {// number of uploaded image is 1
+					await imageService.productUploader(images, rows[0].prod_id, 'insert')
+				}
+				else {
+					for (let i = 0; i < images.length; i++) {
+						await imageService.productUploader(images[i], rows[0].prod_id, 'insert')
+					}
 				}
 			}
 		})
@@ -530,7 +536,7 @@ router.post('/update-image/:id', async (req, res) => {
 	if (result.length === 0) {
 		errorMessage = errorMessage + " Product record doesn't exist!"
 	}
-	
+
 	//validate image
 	var errorFromValidateImage = imageValidator.validateValidImage(images)
 
@@ -544,16 +550,16 @@ router.post('/update-image/:id', async (req, res) => {
 	if (newImageLength !== oldimageLength) {
 		errorMessage = errorMessage + " Old image links and new uploaded image doesn't have the consistency about length!"
 	}
-	
+
 	if (errorMessage !== '') {
 		return res.status(400).json({
 			errorMessage: errorMessage,
 			statusCode: errorCode
 		})
 	}
-	
+
 	//images = imageService.getImage(images)
-	
+
 	//uploadd image
 
 	if (images.length === undefined) {// number of uploaded image is 1
