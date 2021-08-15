@@ -224,7 +224,7 @@ router.get('/list-by-cat', async (req, res) => {
 			statusCode: errorCode
 		})
 	}
-	
+
 	//cat not exists
 	var result = await knex.raw(`with product as(
 		select * from tbl_product
@@ -272,7 +272,7 @@ router.get('/list-by-cat', async (req, res) => {
 
 	if (result) {
 		return res.status(200).json({
-			numberProduct : numberOfProduct.rows[0],
+			numberProduct: numberOfProduct.rows[0],
 			listProduct: prodList,
 			statusCode: successCode
 		})
@@ -419,25 +419,27 @@ router.post('/update/:id', validator.updateProduct, async (req, res) => {
 
 	var errorMessage = ''
 
-	var prod = await knex('tbl_product')
-		.where('prod_name', prodName)
-		.andWhere('prod_category_id', prodCategoryID)
-
 	var updateProduct = await knex('tbl_product')
-								.where('prod_id', id)
+		.where('prod_id', id)
 
-	var cat = await knex('tbl_categories')
-		.where('cate_id', prodCategoryID)
-	
-	if (cat.length === 0) {
-		errorMessage = " Category doesn't exists!"
+	if (prodCategoryID != undefined) {
+		var prod = await knex('tbl_product')
+			.where('prod_name', prodName)
+			.andWhere('prod_category_id', prodCategoryID)
+
+		var cat = await knex('tbl_categories')
+			.where('cate_id', prodCategoryID)
+
+		if (cat.length === 0) {
+			errorMessage = " Category doesn't exists!"
+		}
 	}
-
+	
 	if (prod.length !== 0) {
 		errorMessage = errorMessage + " Product record with the same name exist!"
 	}
 
-	if(updateProduct.length === 0){
+	if (updateProduct.length === 0) {
 		errorMessage = errorMessage + " Product record to update doesn't exist!"
 	}
 
