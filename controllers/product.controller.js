@@ -499,14 +499,6 @@ router.post('/update/:id', validator.updateProduct, async (req, res) => {
 	if (prodName != undefined && prodName == '') {
 		errorMessage = errorMessage + " Name cannot be blank!"
 	}
-
-	if (prodPrice != undefined && prodPrice == '') {
-		errorMessage = errorMessage + " Price cannot be blank!"
-	}
-
-	if (prodAmount != undefined && prodAmount == '') {
-		errorMessage = errorMessage + " Amount cannot be blank!"
-	}
 	
 	if (errorMessage !== '') {
 		return res.status(400).json({
