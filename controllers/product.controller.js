@@ -483,7 +483,7 @@ router.post('/update/:id', validator.updateProduct, async (req, res) => {
 		var prod = await knex('tbl_product')
 			.where('prod_name', prodName)
 			.andWhere('prod_category_id', prodCategoryID)
-		if (prod.length !== 0) {
+		if (prod.length !== 0 && prodName != '') {
 			errorMessage = errorMessage + " Product record with the same name and same category exist!"
 		}
 
