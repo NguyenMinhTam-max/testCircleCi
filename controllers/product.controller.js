@@ -469,6 +469,7 @@ router.post('/update/:id', validator.updateProduct, async (req, res) => {
 	const { id } = req.params
 
 	var errorMessage = ''
+
 	if (prodCategoryID != undefined) {
 		var cat = await knex('tbl_categories')
 			.where('cate_id', prodCategoryID)
@@ -495,13 +496,27 @@ router.post('/update/:id', validator.updateProduct, async (req, res) => {
 		errorMessage = errorMessage + " Product record to update doesn't exist!"
 	}
 
+	if (prodName != undefined && prodName == '') {
+		errorMessage = errorMessage + " Name cannot be blank!"
+	}
+
+	if (prodPrice != undefined && prodPrice == '') {
+		errorMessage = errorMessage + " Price cannot be blank!"
+	}
+
+	if (prodAmount != undefined && prodAmount == '') {
+		errorMessage = errorMessage + " Amount cannot be blank!"
+	}
+	
 	if (errorMessage !== '') {
 		return res.status(400).json({
 			errorMessage: errorMessage,
 			statusCode: errorCode
 		})
 	}
-	console.log('test')
+
+
+
 	await knex('tbl_product')
 		.where('prod_id', id)
 		.update({
