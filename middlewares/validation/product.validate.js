@@ -84,7 +84,8 @@ const updateProduct = (req, res, next) => {
 			prodName: { type: 'string' },
 			prodCategoryID: { type: 'integer' },
 			prodAmount: { type: 'integer'},
-			prodPrice: { type: 'integer' }
+			prodPrice: { type: 'integer' },
+			prodDescription : {type: "string"}
 		},
 		required: [],
 		additionalProperties: true
