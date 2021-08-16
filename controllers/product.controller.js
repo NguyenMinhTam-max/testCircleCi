@@ -34,7 +34,7 @@ router.post('/list', validator.listProduct, async (req, res) => {
 	}
 
 	var result = await knex.raw(`with product as(
-		select * from tbl_product
+		select * from tbl_product join tbl_categories on tbl_categories.cate_id = tbl_product.prod_category_id
 		order by prod_id desc
 		offset ${offset}
 		limit ${limit}
@@ -53,6 +53,7 @@ router.post('/list', validator.listProduct, async (req, res) => {
 			prod_id: result[index].prod_id,
 			prod_name: result[index].prod_name,
 			prod_category_id: result[index].prod_category_id,
+			prod_category_name: result[index].cate_name,
 			prod_amount: result[index].prod_amount,
 			prod_description: result[index].prod_description,
 			prod_created_date: result[index].prod_created_date,
@@ -383,7 +384,13 @@ router.get('/details/:id', async (req, res) => {
 router.post('/add', async (req, res) => {
 
 	const { prodName, prodCategoryID, prodAmount, prodPrice, prodDescription, prodStatus } = req.body
+	
 	var images = req.files //need to get image from input type file, name is 'image'
+	console.log(prodName)
+	console.log(prodCategoryID)
+	console.log(prodAmount)
+	console.log(prodPrice)
+	console.log(prodDescription)
 	var errorMessage = "";
 	//validate field
 	if (prodName === undefined || prodCategoryID === undefined || prodAmount === undefined || prodPrice === undefined) {
@@ -425,10 +432,7 @@ router.post('/add', async (req, res) => {
 
 		images = imageService.getImage(images)
 	}
-	else {
-		images = null
-	}
-
+	
 	if (errorMessage !== "") {
 		return res.status(400).json({
 			errorMessage: errorMessage,
